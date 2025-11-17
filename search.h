@@ -2,21 +2,20 @@
 #define SEARCH_H
 
 #include <stdbool.h>
-#include "common.h"
 #include "inventory.h"
 #include "suppliers.h"
 
 typedef struct SearchCriteria {
-	bool hasPriceMin;
-	double priceMin;
-	bool hasPriceMax;
-	double priceMax;
-	bool hasCategory;
-	char category[MAX_CATEGORY_LEN];
-	bool onlyInStock;
-	char sortBy; // 'p' price, 'n' name
+    bool hasCategory;
+    bool hasPriceMin;
+    bool hasPriceMax;
+    bool onlyInStock;
+    char sortBy;  // 'p' = price, 'n' = name
+    char category[MAX_CATEGORY_LEN];
+    double priceMin;
+    double priceMax;
 } SearchCriteria;
 
-void search_build_and_execute(Inventory* inv, SuppliersDB* sdb, SearchCriteria c);
+void search_build_and_execute(struct Inventory* inv, struct SuppliersDB* sdb, SearchCriteria criteria);
 
-#endif // SEARCH_H
+#endif

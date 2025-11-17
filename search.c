@@ -113,12 +113,21 @@ static void free_category_tree(CategoryNode* root) {
 }
 
 // Comparison functions for sorting results
-static int compare_by_price(const void* a, const void* b) {
+static int compare_by_price_asc(const void* a, const void* b) {
     const Result* x = (const Result*)a;
     const Result* y = (const Result*)b;
     
     if (x->price < y->price) return -1;
     if (x->price > y->price) return 1;
+    return 0;
+}
+
+static int compare_by_price_desc(const void* a, const void* b) {
+    const Result* x = (const Result*)a;
+    const Result* y = (const Result*)b;
+    
+    if (x->price > y->price) return -1;
+    if (x->price < y->price) return 1;
     return 0;
 }
 
@@ -211,7 +220,9 @@ void search_build_and_execute(Inventory* inv, SuppliersDB* sdb, SearchCriteria c
     
     // Sort results based on criteria
     if (criteria.sortBy == 'p') {
-        qsort(results, resultCount, sizeof(Result), compare_by_price);
+        qsort(results, resultCount, sizeof(Result), compare_by_price_asc);
+    } else if (criteria.sortBy == 'P') {
+        qsort(results, resultCount, sizeof(Result), compare_by_price_desc);
     } else if (criteria.sortBy == 'n') {
         qsort(results, resultCount, sizeof(Result), compare_by_name);
     }

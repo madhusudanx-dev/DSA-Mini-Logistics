@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define MAX_SKIP_LEVEL 16
 
@@ -350,16 +351,20 @@ bool inventory_update_stock(Inventory* inv, int productId, int newStock) {
 
 void inventory_print_all(Inventory* inv) {
     if (!inv) return;
-    
-    printf("\n-- Inventory --\n");
-    
+
+    printf("\n---------------------- INVENTORY ----------------------\n");
+    printf("%-6s %-20s %-15s %-10s %-10s %-8s\n", 
+           "ID", "Name", "Category", "Supplier", "Price", "Stock");
+    printf("-------------------------------------------------------\n");
+
     SkipNode* current = inv->products->header->forward[0];
     while (current) {
         Product* p = &current->product;
-        printf("ID:%d Name:%s Cat:%s Supplier:%d Price:%.2f Stock:%d\n",
+        printf("%-6d %-20s %-15s %-10d %-10.2f %-8d\n",
                p->id, p->name, p->category, p->supplierId, p->price, p->stock);
         current = current->forward[0];
     }
+    printf("-------------------------------------------------------\n");
 }
 
 void inventory_heap_refresh_all(Inventory* inv) {
@@ -446,4 +451,61 @@ bool inventory_undo_last(Inventory* inv) {
     free(node);
     printf("Undo completed.\n");
     return true;
+}
+
+void inventory_print_category_summary(Inventory* inv) {
+    if (!inv) return;
+
+    typedef struct {
+        char category[MAX_CATEGORY_LEN];
+        int count;
+        int totalStock;
+        double totalPrice;
+    } CatSummary;
+
+    CatSummary summary[100];
+    int scount = 0;
+
+    // iterate through all products
+    SkipNode* current = inv->products->header->forward[0];
+    while (current) {
+        Product* p = &current->product;
+        int found = 0;
+
+        // check if category already exists in summary
+        for (int i = 0; i < scount; i++) {
+            if (strcmp(summary[i].category, p->category) == 0) {
+                summary[i].count++;
+                summary[i].totalStock += p->stock;
+                summary[i].totalPrice += p->price;
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found && scount < 100) {
+            strcpy(summary[scount].category, p->category);
+            summary[scount].count = 1;
+            summary[scount].totalStock = p->stock;
+            summary[scount].totalPrice = p->price;
+            scount++;
+        }
+        current = current->forward[0];
+    }
+
+    printf("\n===========================================================\n");
+    printf("                INVENTORY OVERVIEW (BY CATEGORY)\n");
+    printf("===========================================================\n");
+    printf("%-18s %-10s %-13s %-10s\n",
+           "Category", "Products", "Total Stock", "Avg Price");
+    printf("-----------------------------------------------------------\n");
+
+    for (int i = 0; i < scount; i++) {
+        double avg = summary[i].totalPrice / summary[i].count;
+        printf("%-18s %-10d %-13d %-10.2f\n",
+               summary[i].category, summary[i].count,
+               summary[i].totalStock, avg);
+    }
+
+    printf("-----------------------------------------------------------\n");
 }

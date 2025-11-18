@@ -41,4 +41,10 @@ void uiSetLowStockThreshold(void);
 // helpers usable across modules
 int invFindIndexById(int id);
 
+// new helper function
+void displayProductsBrief(void);
+
+// perishable categories check
+int isPerishableCategory(const char* category);
+
 #endif

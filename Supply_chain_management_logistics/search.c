@@ -32,6 +32,9 @@ static int ciContains(const char *text, const char *sub)
 
 void uiSearchByName(void)
 {
+    // Show products first
+    displayProductsBrief();
+    
     char key[50];
     printf(BLUE "\nEnter product name (substring ok): " RESET);
     scanf("%49s", key);
@@ -58,14 +61,17 @@ void uiSearchByName(void)
 
 void uiSearchByPriceRange(void)
 {
+    // Show products first
+    displayProductsBrief();
+    
     float mn, mx;
-    printf(BLUE "\nEnter min price: " RESET);
+    printf(BLUE "\nEnter min price (0-9999): " RESET);
     scanf("%f", &mn);
-    printf(BLUE "Enter max price: " RESET);
+    printf(BLUE "Enter max price (0-9999): " RESET);
     scanf("%f", &mx);
-    if (mn < 0 || mx <= 0 || mn > mx)
+    if (mn < 0 || mx <= 0 || mn > mx || mx > 9999)
     {
-        printf(RED "[!] Invalid range.\n" RESET);
+        printf(RED "[!] Invalid range. Use 0-9999.\n" RESET);
         return;
     }
     int f = 0;
@@ -91,6 +97,9 @@ void uiSearchByPriceRange(void)
 
 void uiSearchByCategory(void)
 {
+    // Show products first
+    displayProductsBrief();
+    
     char cat[30];
     printf(BLUE "\nEnter category: " RESET);
     scanf("%29s", cat);
@@ -117,6 +126,10 @@ void searchMenu(void)
 {
     while (1)
     {
+        // SHOW ALL PRODUCTS FIRST
+        displayProductsBrief();
+
+        // NOW SHOW SUB OPTIONS
         printf(BOLDWHITE "\n=== PRODUCT SEARCH MENU ===\n" RESET);
         printf(CYAN
                "1. Search by Name\n"
@@ -130,15 +143,11 @@ void searchMenu(void)
         {
             printf(RED "[!] Invalid choice.\n" RESET);
             int c;
-            while ((c = getchar()) != '\n' && c != EOF)
-            {
-            }
+            while ((c = getchar()) != '\n' && c != EOF) {}
             continue;
         }
         int c;
-        while ((c = getchar()) != '\n' && c != EOF)
-        {
-        }
+        while ((c = getchar()) != '\n' && c != EOF) {}
 
         if (ch == 1)
             uiSearchByName();

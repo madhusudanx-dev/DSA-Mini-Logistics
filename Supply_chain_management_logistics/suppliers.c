@@ -111,6 +111,17 @@ static Supplier *avlInsert(Supplier *node, int id, const char *name, float ratin
     return node;
 }
 
+// Check for duplicate supplier ID
+int findSupplierById(int id)
+{
+    for (int i = 0; i < supplierCount; i++)
+    {
+        if (supplierList[i].id == id)
+            return i;
+    }
+    return -1;
+}
+
 // lifecycle / preload
 void initSuppliers(void)
 {
@@ -147,15 +158,27 @@ void uiInsertSupplier(void)
         printf(RED "[!] Supplier list full.\n" RESET);
         return;
     }
+    
+    // Show existing suppliers first
+    uiDisplaySuppliers();
+    
     int id;
     char name[50];
     float rating;
 
-    if (!readInt("\nEnter Supplier ID: ", &id) || id <= 0)
+    if (!readInt("\nEnter Supplier ID (1-999): ", &id) || id <= 0 || id > 999)
     {
-        printf(RED "[!] ID must be positive.\n" RESET);
+        printf(RED "[!] ID must be between 1-999.\n" RESET);
         return;
     }
+    
+    // Check for duplicate ID
+    if (findSupplierById(id) != -1)
+    {
+        printf(RED "[!] Supplier ID already exists.\n" RESET);
+        return;
+    }
+    
     readWord("Enter Supplier Name: ", name, sizeof(name));
     if (!readFloat("Enter Rating (0.0 - 10.0): ", &rating) || rating < 0 || rating > 10)
     {
@@ -168,6 +191,9 @@ void uiInsertSupplier(void)
     supplierCount++;
 
     printf(GREEN "[+] Supplier '%s' added (Rating: %.2f)\n" RESET, name, rating);
+    
+    // Show updated supplier list
+    uiDisplaySuppliers();
 }
 
 void uiDisplaySuppliers(void)

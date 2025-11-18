@@ -29,4 +29,7 @@ void uiInsertSupplier(void);
 void uiDisplaySuppliers(void); // insertion order (unsorted)
 void uiRankSuppliers(void);    // ranking view (sorted by rating desc)
 
+// Helper function to check for duplicate supplier ID
+int findSupplierById(int id);
+
 #endif

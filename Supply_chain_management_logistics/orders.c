@@ -34,9 +34,16 @@ void uiDisplayOrders(void)
     while (i != rear)
     {
         int idx = invFindIndexById(q[i].productID);
-        if (idx != -1)
-            printf(CYAN "%-12d %-20s %-8d\n" RESET,
-                   inventory[idx].id, inventory[idx].name, q[i].quantity);
+        if (idx != -1) {
+            // Show perishable warning in order queue
+            if (isPerishableCategory(inventory[idx].category)) {
+                printf(YELLOW "%-12d %-20s %-8d  PERISHABLE\n" RESET,
+                       inventory[idx].id, inventory[idx].name, q[i].quantity);
+            } else {
+                printf(CYAN "%-12d %-20s %-8d\n" RESET,
+                       inventory[idx].id, inventory[idx].name, q[i].quantity);
+            }
+        }
         else
             printf(RED "%-12d [Deleted Product] %-8d\n" RESET,
                    q[i].productID, q[i].quantity);
@@ -48,21 +55,7 @@ void uiDisplayOrders(void)
 void uiEnqueueOrder(void)
 {
     // Show available products from inventory
-    printf(BOLDWHITE "\n=== AVAILABLE PRODUCTS ===\n" RESET);
-    if (productCount == 0)
-    {
-        printf(RED "[!] No products available in inventory.\n" RESET);
-        return;
-    }
-
-    printf(CYAN "ID    Name               Category     Qty   Price(Rs.)\n" RESET);
-    printf(CYAN "----------------------------------------------------\n" RESET);
-    for (int i = 0; i < productCount; i++)
-    {
-        printf(CYAN "%-4d %-18s %-12s %-5d %-9.2f\n" RESET,
-               inventory[i].id, inventory[i].name, inventory[i].category,
-               inventory[i].quantity, inventory[i].price);
-    }
+    displayProductsBrief();
 
     // Now prompt to add order
     if (qFull())
@@ -88,14 +81,37 @@ void uiEnqueueOrder(void)
         return;
     }
 
-    printf(BLUE "Enter Quantity: " RESET);
-    if (scanf("%d", &qty) != 1 || qty <= 0)
+    // Check if ordering perishable item
+    if (isPerishableCategory(inventory[idx].category)) {
+        printf(YELLOW "\n  PERISHABLE ITEM: %s\n" RESET, inventory[idx].name);
+        printf(YELLOW "💡 Recommendation: Order smaller quantities more frequently\n" RESET);
+        printf(YELLOW "   Suggested maximum: 30 units per order\n" RESET);
+    }
+
+    printf(BLUE "Enter Quantity (1-999): " RESET);
+    if (scanf("%d", &qty) != 1 || qty <= 0 || qty > 999)
     {
-        printf(RED "[!] Invalid quantity.\n" RESET);
+        printf(RED "[!] Quantity must be between 1-999.\n" RESET);
         flushLine();
         return;
     }
     flushLine();
+
+    // Extra warning for large perishable orders
+    if (isPerishableCategory(inventory[idx].category) && qty > 30) {
+        printf(YELLOW "\n  WARNING: Large order for perishable item!\n" RESET);
+        printf(YELLOW "   Ordering %d units may lead to spoilage\n" RESET, qty);
+        printf(YELLOW "   Consider splitting into smaller, more frequent orders\n" RESET);
+        
+        char confirm;
+        printf(YELLOW "   Continue anyway? (y/n): " RESET);
+        scanf(" %c", &confirm);
+        flushLine();
+        if (confirm != 'y' && confirm != 'Y') {
+            printf(YELLOW "[*] Order cancelled\n" RESET);
+            return;
+        }
+    }
 
     if (qty > inventory[idx].quantity)
     {
@@ -141,8 +157,14 @@ void uiProcessOrders(void)
         if (inventory[idx].quantity >= o.quantity)
         {
             inventory[idx].quantity -= o.quantity;
-            printf(GREEN " Processed %s x %d (Remaining: %d)\n" RESET,
-                   inventory[idx].name, o.quantity, inventory[idx].quantity);
+            // Special message for perishable items
+            if (isPerishableCategory(inventory[idx].category)) {
+                printf(YELLOW " Processed %s x %d (Remaining: %d) ⚠️ PERISHABLE\n" RESET,
+                       inventory[idx].name, o.quantity, inventory[idx].quantity);
+            } else {
+                printf(GREEN " Processed %s x %d (Remaining: %d)\n" RESET,
+                       inventory[idx].name, o.quantity, inventory[idx].quantity);
+            }
             processed++;
         }
         else
@@ -154,4 +176,7 @@ void uiProcessOrders(void)
     }
 
     printf(YELLOW "\n[*] Summary: %d processed, %d failed.\n" RESET, processed, failed);
+    
+    // Show updated inventory after processing
+    displayProductsBrief();
 }
